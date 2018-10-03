@@ -2,10 +2,36 @@ const url = require('url');
 const fs = require('fs');
 const ejs = require('ejs')
 
-var handlers={}
-handlers['/Form'] = function(request,response){return Form(request,response)}
+const render(filepath, data) {
+    var str = fs.readFileSync(path.resolve('./views', filepath), 'utf8');
+    return ejs.render(str, data)
+}
 
-var route = function(request,response){
+var handlers={
+    '/form': function(req,res) {
+        console.log("Form")
+        if(url.parse(request.url).search == null){
+            var html = render('new-form.html',).
+            res.writeHead(200,{'Content-type':'text/html'})
+            res.end(html)
+        }else{
+            var params = url.parse(request.url,true).query;
+            var html = render('result.html', params).
+            res.writeHead(200,{'Content-type':'text/html'})
+            res.end(html)
+        }
+    },
+    '/hello-world': function() {
+    },
+    '*': function(req, res) {
+        render('404.html')
+        res.writeHead(404,{'Content-type':'text/plain'})
+
+    }
+}
+
+
+module.exports = function(request,response){
     console.log("route")
     if(typeof handlers[url.parse(request.url,true).pathname] != "function") {
         missing(request,response)
@@ -15,27 +41,3 @@ var route = function(request,response){
     }
 }
 
-function Form(request,response){
-    console.log("Form")
-    if(url.parse(request.url).search == null){
-        var path = __dirname+'/Form.html'
-        var str = fs.readFileSync(path, 'utf8');
-        var formHtml = ejs.render(str,{filename:path})
-        response.writeHead(200,{'Content-Type':'text/html'})
-        response.end(formHtml)
-    }else{
-        var params = url.parse(request.url,true).query;
-        console.log(params)
-        var html = ejs.render('<%for(p in params){%><%=p%>:<%=params[p]%><%}%>',{params:params});
-        response.writeHead(200,{'Content-type':'text/html'})
-        response.end(html)
-    }
-}
-
-function missing(request,response){
-    response.writeHead(404,{'Content-type':'text/plain'})
-    response.write("404 not found")
-    response.end()
-}
-
-module.exports = route;
