@@ -19,22 +19,27 @@ var handlers={
     },
     '/form':function(req,res){
         var data=""
+
         req.on('data',function(chunk){
             data+=chunk
         })
 
         req.on('end',function(){
-            data=decodeURI(data)
-            console.log(data)
-            var dataObject = querystring.parse(data)
-            console.log(dataObject)
-            var params  = dataObject 
-            console.log(params) 
-            var html = render('show-form.html', { params: params });
-            res.writeHead(200,{'Content-type':'text/html'})
-            res.end(html)
+                data=decodeURI(data)
+                console.log(data)
+                var dataObject = querystring.parse(data)
+                console.log(dataObject)
+                if(!fs.existsSync(dataObject.title+'.txt')){
+                    fs.writeFileSync(path.resolve('./articals',dataObject.title+'.txt'),dataObject.content,'utf-8')
+                }
+                var params  = dataObject 
+                console.log(params) 
+                var html = render('show-form.html', { params: params });
+                res.writeHead(200,{'Content-type':'text/html'})
+                res.end(html)
         })
-    //    var params  = url.parse(req.url,true).query   
+    // get
+    //     var params  = url.parse(req.url,true).query   
     //     var html = render('show-form.html', { params: params });
     //     res.writeHead(200,{'Content-type':'text/html'})
     //     res.end(html)
