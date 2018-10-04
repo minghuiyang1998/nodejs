@@ -1,41 +1,49 @@
 const url = require('url');
 const fs = require('fs');
+const path = require('path')
 const ejs = require('ejs')
 
-var handlers={}
-handlers['/Form'] = function(request,response){return Form(request,response)}
+function render (filePath,data){
+    console.log("render")
+    var str = fs.readFileSync(path.resolve('./views',filePath),'utf-8')
+    console.log(path.resolve('./views',filePath))
+    var html = ejs.render(str,data)
+    return html
+}
 
-var route = function(request,response){
-    console.log("route")
-    if(typeof handlers[url.parse(request.url,true).pathname] != "function") {
-        missing(request,response)
-    } 
-    else{
-        handlers[url.parse(request.url,true).pathname](request,response);
+var handlers={
+    '/form/new':function(req,res){
+        var html = render('new-form.html')
+        res.writeHead(200,{'Content-Type':'text/html'})
+        res.end(html)
+    },
+    '/form':function(req,res){
+        var params  = url.parse(req.url,true).query   
+        var html = render('show-form.html', { params: params });
+        res.writeHead(200,{'Content-type':'text/html'})
+        res.end(html)
+    },
+    '/hello-world':function(req,res){
+        console.log("hello-world")
+        res.writeHead(200,{'Content-type':'text/html'})
+        var html = render('hello-world.html')
+        res.end(html)
+    },
+    "*":function(req,res){
+        console.log("404")
+        res.writeHead(404,{'Content-type':'text/html'})
+        var html = render('404.html')
+        res.end(html)
     }
 }
 
-function Form(request,response){
-    console.log("Form")
-    if(url.parse(request.url).search == null){
-        var path = __dirname+'/Form.html'
-        var str = fs.readFileSync(path, 'utf8');
-        var formHtml = ejs.render(str,{filename:path})
-        response.writeHead(200,{'Content-Type':'text/html'})
-        response.end(formHtml)
+module.exports = function(req,res){
+    console.log("enter route")
+    var filePath = url.parse(req.url,true).pathname
+    console.log(filePath)
+    if(typeof handlers[filePath] === "function"){
+        handlers[filePath](req,res)
     }else{
-        var params = url.parse(request.url,true).query;
-        console.log(params)
-        var html = ejs.render('<%for(p in params){%><%=p%>:<%=params[p]%><%}%>',{params:params});
-        response.writeHead(200,{'Content-type':'text/html'})
-        response.end(html)
+        handlers["*"](req,res)
     }
 }
-
-function missing(request,response){
-    response.writeHead(404,{'Content-type':'text/plain'})
-    response.write("404 not found")
-    response.end()
-}
-
-module.exports = route;
