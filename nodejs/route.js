@@ -19,19 +19,14 @@ var handlers={
     },
     '/form':function(req,res){
         var data=""
-
         req.on('data',function(chunk){
             data+=chunk
         })
 
         req.on('end',function(){
                 data=decodeURI(data)
-                console.log(data)
                 var dataObject = querystring.parse(data)
-                console.log(dataObject)
-                if(!fs.existsSync(dataObject.title+'.txt')){
-                    fs.writeFileSync(path.resolve('./articals',dataObject.title+'.txt'),dataObject.content,'utf-8')
-                }
+                fs.writeFileSync(path.resolve('./articals',Date.now().toString()),data,'utf-8')
                 var params  = dataObject 
                 console.log(params) 
                 var html = render('show-form.html', { params: params });
