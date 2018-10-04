@@ -17,7 +17,16 @@ var handlers={
         res.writeHead(200,{'Content-Type':'text/html'})
         res.end(html)
     },
-    '/form':function(req,res){
+    '/show-form':function(req,res){
+        var query  = url.parse(req.url,true).query
+        var id = query.id 
+        var article = fs.readFileSync(path.resolve('./articals',id.toString()),'utf-8')
+        var params = querystring.parse(article)
+        var html = render('show-form.html', { params: params });
+        res.writeHead(200,{'Content-type':'text/html'})
+        res.end(html)
+    },
+    '/forms':function(req,res){
         var data=""
         req.on('data',function(chunk){
             data+=chunk
@@ -25,13 +34,15 @@ var handlers={
 
         req.on('end',function(){
                 data=decodeURI(data)
-                var dataObject = querystring.parse(data)
-                fs.writeFileSync(path.resolve('./articals',Date.now().toString()),data,'utf-8')
-                var params  = dataObject 
-                console.log(params) 
-                var html = render('show-form.html', { params: params });
-                res.writeHead(200,{'Content-type':'text/html'})
-                res.end(html)
+                var id = Date.now().toString()
+                fs.writeFileSync(path.resolve('./articals',id),data,'utf-8')
+                res.writeHead(302,{'Location':'http:///127.0.0.1:8080/show-form?id='+id})
+                res.end()
+                // var params  = dataObject 
+                // console.log(params) 
+                // var html = render('show-form.html', { params: params });
+                // res.writeHead(200,{'Content-type':'text/html'})
+                // res.end(html)
         })
     // get
     //     var params  = url.parse(req.url,true).query   
