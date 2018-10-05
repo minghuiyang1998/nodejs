@@ -3,10 +3,8 @@
     <body>
         <ul id="article-list">
             <%if(articles.length!=0){
-                articles.forEach((a)=>{
-                    if(a.length!=0){%>
-                        <li><a :href="http://127.0.0.1:8080/show-article?id=?${a}"><%=a%></a></li>
-                   <%}%>
+                articles.forEach((a)=>{%>
+                    <li><a :href="http://127.0.0.1:8080/show-article?id=?${a}"><%=a%></a></li>
                 <%})%>
             <%}%>
         </ul>

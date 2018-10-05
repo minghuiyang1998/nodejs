@@ -10,8 +10,6 @@ function render (filePath,data){
     return html
 }
 
-var articles=[]
-
 var handlers={
     '/article/new':function(req,res){
         var html = render('new-article.html')
@@ -37,13 +35,13 @@ var handlers={
             req.on('end',function(){
                     data=decodeURI(data)
                     var id = Date.now().toString()
-                    articles.push(id)
                     fs.writeFileSync(path.resolve('./articles',id),data,'utf-8')
                     res.writeHead(302,{'Location':'http:///127.0.0.1:8080/show-article?id='+id})
                     res.end()
             })
 
         }else if(req.method === "GET"){
+            var articles = fs.readdirSync("./articles")
             var html=render('article-list.html',{articles:articles})
             res.writeHead(200,{'Content-type':'text/html'})
             res.end(html)
@@ -64,12 +62,6 @@ var handlers={
 }
 
 module.exports = function(req,res){
-    if(articles.length === 0){
-        console.log("dir")
-        var dir = fs.readdirSync("./articles")
-        console.log(dir)
-        articles = dir
-    }
     var filePath = url.parse(req.url,true).pathname
    // console.log(filePath)
     if(typeof handlers[filePath] === "function"){
