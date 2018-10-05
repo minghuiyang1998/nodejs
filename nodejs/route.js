@@ -38,7 +38,6 @@ var handlers={
                     data=decodeURI(data)
                     var id = Date.now().toString()
                     articles.push(id)
-                    fs.appendFile(path.resolve('./articles','catalogue'),id+',','utf-8')
                     fs.writeFileSync(path.resolve('./articles',id),data,'utf-8')
                     res.writeHead(302,{'Location':'http:///127.0.0.1:8080/show-article?id='+id})
                     res.end()
@@ -66,10 +65,10 @@ var handlers={
 
 module.exports = function(req,res){
     if(articles.length === 0){
-        var data = fs.readFileSync(path.resolve('./articles','catalogue'),'utf-8')
-        articles = data.split(",")
-        console.log(data)
-        console.log(articles)
+        console.log("dir")
+        var dir = fs.readdirSync("./articles")
+        console.log(dir)
+        articles = dir
     }
     var filePath = url.parse(req.url,true).pathname
    // console.log(filePath)
