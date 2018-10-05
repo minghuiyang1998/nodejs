@@ -1,0 +1,13 @@
+<html>
+    <head></head>
+    <body>
+        <div id="content">
+            <form action="http://127.0.0.1:8080/article/id=<%=params.id%>" method="POST">
+                <input name="_method" type="hidden" value="PUT">
+                <p>title<input type="text" name="title" value="<%=params.title%>"/></p>
+                <p>content<input type="text" name="content" value="<%=params.content%>"/></p>
+                <input type="submit" value="Submit"/>
+            </form>
+        </div>
+    </body>
+</html>

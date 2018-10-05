@@ -4,7 +4,11 @@
         <ul id="article-list">
             <%if(articles.length!=0){
                 articles.forEach((a)=>{%>
-                    <li><a :href="http://127.0.0.1:8080/show-article?id=?${a}"><%=a%></a></li>
+                    <li>
+                       <a href="http://127.0.0.1:8080/article?id=<%=a%>"><%=a%></a>
+                       <a href="http://127.0.0.1:8080/article/id=<%=a%>/edit">modify</a>
+                       <a href="http://127.0.0.1:8080/article/id=<%=a%>">delete</a>
+                    </li>
                 <%})%>
             <%}%>
         </ul>
