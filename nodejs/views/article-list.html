@@ -7,7 +7,10 @@
                     <li>
                        <a href="http://127.0.0.1:8080/article?id=<%=a%>"><%=a%></a>
                        <a href="http://127.0.0.1:8080/article/id=<%=a%>/edit">modify</a>
-                       <a href="http://127.0.0.1:8080/article/id=<%=a%>">delete</a>
+                       <form action="http://127.0.0.1:8080/article/id=<%=a%>" method="POST">
+                        <input name="_method" type="hidden" value="DELETE">
+                        <input type="submit" value="Delete"/> 
+                       </form>
                     </li>
                 <%})%>
             <%}%>

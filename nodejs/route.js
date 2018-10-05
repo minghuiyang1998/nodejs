@@ -59,12 +59,12 @@ var handlers={
                     }
                     article = querystring.stringify(article_params)
                     fs.writeFileSync(path.resolve('./articles',id),article,'utf-8') 
-                    res.writeHead(302,{'Location':'http:///127.0.0.1:8080/article?id='+ parseInt(id)})
+                    res.writeHead(302,{'Location':'http://127.0.0.1:8080/article?id='+ parseInt(id)})
                     res.end()   
-                }else if(_method === "DELETE"){
-
-
-                    
+                }else if(params._method === "DELETE"){
+                    fs.unlinkSync(path.resolve('./articles',id))
+                    res.writeHead(302,{'Location':'http://127.0.0.1:8080/articles'})
+                    res.end()
                 }
             })
         }
