@@ -10,21 +10,21 @@ function render (filePath,data){
     return html
 }
 
-function route(req,res,data){
+function route(req,res){
     var filePath = url.parse(req.url,true).pathname
     console.log(filePath)
     if(/^\/article\/new$/.test(filePath)){
         handlers["/article/new"](req,res)
      }else if(/^\/article\/(.+)\/edit$/.test(filePath)){
-         handlers["/article/*/edit"](req,res)
+        handlers["/article/*/edit"](req,res)
      }else if(/^\/articles$/.test(filePath)){
-         handlers["/articles"](req,res,data)
+        handlers["/articles"](req,res)
      }else if(/^\/article$/.test(filePath)){
-             handlers["/article"](req,res,data)
+        handlers["/article"](req,res)
      }else if(/^\/helloworld$/.test(filePath)){
-         handlers["/hello-world"](req,res)
+        handlers["/hello-world"](req,res)
      }else{
-         handlers["*"](req,res)
+        handlers["*"](req,res)
      }
 }
 
@@ -37,7 +37,11 @@ var method={
         })
         req.on('end',function(){
             data=decodeURI(data)
-            route(req,res,data)
+            var id = Date.now().toString()
+            console.log(data)
+            fs.writeFileSync(path.resolve('./articles',id),data,'utf-8')
+            res.writeHead(302,{'Location':'http:///127.0.0.1:8080/article?id='+id})
+            res.end()
         })
     },
     'GET':function(req,res){
@@ -45,9 +49,45 @@ var method={
         route(req,res,null)
     },
     'DELETE':function(req,res){
-        console.log("delete success")
-        res.writeHead(200,{'Content-Type':'text/html'})
-        res.end() 
+        console.log("DELETE")
+        var query  = url.parse(req.url,true).query
+        var id = query.id 
+        fs.unlinkSync(path.resolve('./articles',id))
+        if(req.headers.accept === "text/plain"){
+            res.writeHead(200,{'Content-Type':'text/plain'})
+            res.end("success")
+        }
+    },
+    'PUT':function(req,res){
+        console.log("PUT")
+        var data=""
+        req.on('data',function(chunk){
+            data+=chunk
+        })
+        req.on('end',function(){
+            data=decodeURI(data)
+            var query  = url.parse(req.url,true).query
+            var id = query.id 
+            console.log(id)
+            var article = fs.readFileSync(path.resolve('./articles',id),'utf-8')
+            var article_params = querystring.parse(article)
+            console.log(data)
+            var params = querystring.parse(data)
+            for(var item in params){
+                if(params[item].length != 0 && article_params[item] != params[item]){
+                    article_params[item] = params[item]
+                }
+            }
+            article = querystring.stringify(article_params)
+            if(req.headers.accept === "text/html"){
+                fs.writeFileSync(path.resolve('./articles',id),article,'utf-8') 
+                res.writeHead(200,{"Content-type":"text/html"})
+                html='http://127.0.0.1:8080/article?id='+id
+                res.end(html) 
+            }  
+
+        })
+
     }
 }
 
@@ -69,57 +109,22 @@ var handlers={
         res.writeHead(200,{"Content-type":"text/html"})
         res.end(html)
     },
-    '/article':function(req,res,data){
+    '/article':function(req,res){
         console.log("detail")
         var query  = url.parse(req.url,true).query
         var id = query.id 
-        if(data === null){
-            console.log(2)
-            var article = fs.readFileSync(path.resolve('./articles',id),'utf-8')
-            var article_params = querystring.parse(article)
-            var html = render('show-article.html', { params: article_params });
-            res.writeHead(200,{'Content-type':'text/html'})
-            res.end(html)
-        }else {
-            console.log(3)
-            var params = querystring.parse(data)
-            if(params._method === "PUT"){
-                console.log("PUT")
-                console.log(id)
-                var article = fs.readFileSync(path.resolve('./articles',id),'utf-8')
-                var article_params = querystring.parse(article)
-                for(var item in params){
-                    if(params[item].length != 0 && article_params[item] != params[item]){
-                        article_params[item] = params[item]
-                    }
-                }
-                article = querystring.stringify(article_params)
-                fs.writeFileSync(path.resolve('./articles',id),article,'utf-8') 
-                res.writeHead(302,{'Location':'http://127.0.0.1:8080/article?id='+id})
-                res.end()   
-            }else if(params._method === "DELETE"){
-                fs.unlinkSync(path.resolve('./articles',id))
-                res.writeHead(302,{'Location':'http://127.0.0.1:8080/articles'})
-                res.end()
-            }
-        }
+        var article = fs.readFileSync(path.resolve('./articles',id),'utf-8')
+        var article_params = querystring.parse(article)
+        var html = render('show-article.html', { params: article_params });
+        res.writeHead(200,{'Content-type':'text/html'})
+        res.end(html)
     },
-    '/articles':function(req,res,data){
+    '/articles':function(req,res){
         console.log("articles")
-        if(data === null){
-            console.log(2)
-            var articles = fs.readdirSync("./articles")
-            var html=render('article-list.html',{articles:articles})
-            res.writeHead(200,{'Content-type':'text/html'})
-            res.end(html)
-        }else{
-            console.log(3)
-            var id = Date.now().toString()
-            console.log(data)
-            fs.writeFileSync(path.resolve('./articles',id),data,'utf-8')
-            res.writeHead(302,{'Location':'http:///127.0.0.1:8080/article?id='+id})
-            res.end()
-        }
+        var articles = fs.readdirSync("./articles")
+        var html=render('article-list.html',{articles:articles})
+        res.writeHead(200,{'Content-type':'text/html'})
+        res.end(html)
     },
     '/hello-world':function(req,res){
         console.log("hello-world")
