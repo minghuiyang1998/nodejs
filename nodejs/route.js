@@ -41,8 +41,8 @@ var handlers={
 
         var pathname = url.parse(req.url,true).pathname
         var id = /^\/article\/id=(.+)\/edit$/.exec(pathname)[1]
-        var article = fs.readFileSync(path.resolve('./articles',id),'utf-8')
-        var params = querystring.parse(article)
+        var article = fs.readFileSync(path.resolve('./data/articles',id),'utf-8')
+        var params = JSON.parse(article)
         params['id'] = id
 
         var html = render('modify-article.html',{params:params})
@@ -55,10 +55,8 @@ var handlers={
 
         var query  = url.parse(req.url,true).query
         var id = query.id 
-        var article = fs.readFileSync(path.resolve('./articles',id),'utf-8')
-        var article_params = querystring.parse(article)
-
-        var html = render('show-article.html', { params: article_params });
+        var article_params = fs.readFileSync(path.resolve('./data/articles',id),'utf-8')
+        var html = render('show-article.html', { params: JSON.parse(article_params) });
         res.writeHead(200,{'Content-type':'text/html'})
         res.end(html)
     },
@@ -66,7 +64,7 @@ var handlers={
         method["GET"](req)
         console.log("articles")
 
-        var articles = fs.readdirSync("./articles")
+        var articles = fs.readdirSync("./data/articles")
 
         var html=render('article-list.html',{articles:articles})
         res.writeHead(200,{'Content-type':'text/html'})
@@ -91,11 +89,11 @@ var handlers={
     "POST /articles":function(req,res){
         var id = method["POST"](req)
 
-        if(req.headers.accept === "text/html"){
-            res.writeHead(200,{"Content-type":"text/html"})
-            html='http://127.0.0.1:8080/article?id='+id
-            res.end(html)
-        }
+        //if(req.headers.accept === "text/html"|"*/*"){
+            res.writeHead(302,{"Location":'http://127.0.0.1:8080/article?id='+id})
+           // html='http://127.0.0.1:8080/article?id='+id
+            res.end()
+        //}
     },
     "DELETE /article":function(req,res){
         method["DELETE"](req)
