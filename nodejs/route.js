@@ -17,12 +17,15 @@ function route(req,res){
 
 
     function next (){//上下文req
-        var filePath = url.parse(req.url,true).pathname
-        console.log(filePath)
-        if(/^\/article\/(.+)\/edit$/.test(filePath)){
-            handlers["GET /article/*/edit"](req,res)
-        }else{
-            var distinguish = req.method+' '+filePath
+        var pathname = req.params.pathname 
+        console.log(pathname)
+        if(/^\/article\/(.+)\/edit$/.test(pathname)){
+            handlers["GET /article/:articleId/edit"](req,res)
+        }else if(/^\/image\/(.+)$/.test(pathname)){
+            handlers["GET /image/:imageId"](req,res)
+        }
+        else{
+            var distinguish = req.method+' '+pathname
             if(typeof handlers[distinguish] === "function"){
                 handlers[distinguish](req,res)
             }else{
@@ -39,10 +42,10 @@ var handlers={
         res.writeHead(200,{'Content-Type':'text/html'})
         res.end(html)
     },
-    'GET /article/*/edit':function(req,res){
+    'GET /article/:articleId/edit':function(req,res){
         console.log("edit")
-        var pathname = url.parse(req.url,true).pathname
-        var id = /^\/article\/id=(.+)\/edit$/.exec(pathname)[1]
+        var pathname = req.params.pathname
+        var id = /^\/article\/(.+)\/edit$/.exec(pathname)[1]
         var article = fs.readFileSync(path.resolve('./data/articles',id),'utf-8')
         var params = JSON.parse(article)
         params['id'] = id
@@ -58,17 +61,19 @@ var handlers={
         var article_params =JSON.parse(article) 
 
         if(Object.keys(article_params).indexOf('file')!= -1){
-            article_params.file = "http://127.0.0.1:8080/image?name="+article_params.file
+            article_params.file = "http://127.0.0.1:8080/image/"+article_params.file
         }
+        console.log('-----------------')
 
         var html = render('show-article.html', { params:article_params});
         res.writeHead(200,{'Content-type':'text/html'})
         res.end(html)
     },
-    'GET /image':function(req,res){
+    'GET /image/:imageId':function(req,res){
         console.log("image")
-        var query = url.parse(req.url,true).query
-        var name = query.name
+        var pathname = req.params.pathname
+        var name = /^\/image\/(.+)$/.exec(pathname)[1]
+        console.log(name)
         var content = fs.readFileSync(path.resolve('./data',name),'binary')
         res.writeHead(200,{'Content-type':'image/png'})
         res.write(content,'binary')

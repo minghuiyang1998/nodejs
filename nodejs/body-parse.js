@@ -5,7 +5,8 @@ var multipart = require("multiparty")
 module.exports = function(req){
     return new Promise((resolve,reject)=>{
         req.params = {}
-        console.log(req.params)
+       // console.log(req.params)
+        req.params.pathname = url.parse(req.url,true).pathname
         req.params.setId = Date.now().toString()
         req.params.queryId= url.parse(req.url,true).query.id
         if(/^application\/x-www-form-urlencoded/.test(req.headers["content-type"])){

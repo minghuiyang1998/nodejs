@@ -6,7 +6,7 @@
                 articles.forEach((a)=>{%>
                     <li id="<%=a%>">
                        <a href="http://127.0.0.1:8080/article?id=<%=a%>"><%=a%></a>
-                       <a href="http://127.0.0.1:8080/article/id=<%=a%>/edit">modify</a>
+                       <a href="http://127.0.0.1:8080/article/<%=a%>/edit">modify</a>
                        <button  name="<%=a%>">delete</button>
                     </li>
                 <%})%>
