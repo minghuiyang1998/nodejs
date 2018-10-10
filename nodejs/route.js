@@ -53,13 +53,13 @@ var handlers={
     },
     'GET /article':function(req,res){
         console.log("detail")
-
-        var query  = url.parse(req.url,true).query
-        var id = query.id 
-        console.log(id)
+        var id = req.params.queryId
         var article = fs.readFileSync(path.resolve('./data/articles',id),'utf-8')
         var article_params =JSON.parse(article) 
-        article_params.file = "http://127.0.0.1:8080/image?name="+article_params.file
+
+        if(Object.keys(article_params).indexOf('file')!= -1){
+            article_params.file = "http://127.0.0.1:8080/image?name="+article_params.file
+        }
 
         var html = render('show-article.html', { params:article_params});
         res.writeHead(200,{'Content-type':'text/html'})
@@ -97,38 +97,35 @@ var handlers={
     },
     "POST /articles":function(req,res){
         console.log("Post")
-        var id = req.articleId
-        //console.log(Object.keys(req))
-        if(Object.keys(req).indexOf('bodyData')!=-1){ 
-            var data = req.bodyData
-            fs.writeFileSync(path.resolve('./data/articles',id),JSON.stringify(data),'utf-8')
-        }else{
-            var data = {}
-            data['title'] = req.fields.title[0]
-            data['content'] = req.fields.content[0]
+        var id = req.params.setId
+        var data = {}
+        data.title = req.params.fields.title
+        data.content = req.params.fields.content
+        
+        if(Object.keys(req.params).indexOf("files")!= -1){
             var fileName = id+'_poster'
-            data['file'] = fileName
-            //console.log(data)
-            fs.writeFileSync(path.resolve('./data/articles',id),JSON.stringify(data),'utf-8')
-            //console.log(req.files)
-            var filePath = req.files.image[0]['path'] 
+            data.file = fileName
 
+            var filePath = req.params.files.image[0]['path'] 
             var file = fs.readFileSync(filePath)
             fs.writeFileSync(path.resolve('./data',fileName),file)
         }
+
+        fs.writeFileSync(path.resolve('./data/articles',id),JSON.stringify(data),'utf-8')
         res.writeHead(302,{"Location":'http://127.0.0.1:8080/article?id='+id})
         res.end()
     },
     "DELETE /article":function(req,res){
         console.log("delete")
-        var query  = url.parse(req.url,true).query
-        var id = query.id 
+        var id = req.params.queryId
         var file = fs.readFileSync(path.resolve('./data/articles',id))
         var params = JSON.parse(file)
 
-        fs.unlinkSync(path.resolve('./data',params.file))
-        fs.unlinkSync(path.resolve('./data/articles',id))
+        if(Object.keys(params).indexOf('file')!= -1){
+            fs.unlinkSync(path.resolve('./data',params.file))
+        }
 
+        fs.unlinkSync(path.resolve('./data/articles',id))
 
         if(req.headers.accept === "text/plain"){
             res.writeHead(200,{'Content-Type':'text/plain'})
@@ -137,56 +134,32 @@ var handlers={
     },
     "PUT /article":function(req,res){
         console.log("PUT")
-        var id = req.articleId
-
-        if(Object.keys(req).indexOf('bodyData')!=-1){
-            var data = req.bodyData
-
-            var article = fs.readFileSync(path.resolve('./data/articles',id),'utf-8')
-            var article_params = JSON.parse(article)
-
-            for(var item in data){
-                if(data[item].length != 0 && article_params[item] != data[item]){
-                    article_params[item] = data[item]
-                }
+        var id = req.params.queryId
+        var data = {}
+        data.title= req.params.fields.title
+        data.content = req.params.fields.content
+        var article = fs.readFileSync(path.resolve('./data/articles',id),'utf-8')
+        var article_params = JSON.parse(article)
+        for(var item in data){
+            if(item != 'file' && data[item].length != 0 && article_params[item] != data[item]){
+                article_params[item] = data[item]
             }
-            
-            fs.writeFileSync(path.resolve('./data/articles',id),JSON.stringify(article_params),'utf-8')
-        
-        }else{
-            var data = {}
-            console.log(Object.keys(req))
-            console.log(req['fields'])
-            data['title'] = req.fields.title[0]
-            data['content'] = req.fields.content[0]
+        }
+
+        if(Object.keys(req.params).indexOf("files")!= -1){
             var fileName = id+'_poster'
-            data['file'] = fileName
-
-            console.log(data)
-            
-            var article = fs.readFileSync(path.resolve('./data/articles',id),'utf-8')
-            var article_params = JSON.parse(article)
-
-            var filePath = req.files.image[0]['path'] 
+            data.file = fileName
+            var filePath = req.params.files.image[0]['path'] 
             var file = fs.readFileSync(filePath)
 
             if(file.length!=0){
                 fs.writeFileSync(path.resolve('./data',fileName),file)
                 fs.unlink(path.resolve('./data',article_params.file))
-                article_params['file'] = data['file']
+                article_params.file= data.file
             }
-
-
-            for(var item in data){
-                if(item != 'file' && data[item].length != 0 && article_params[item] != data[item]){
-                    article_params[item] = data[item]
-                }
-            }
-           
-            fs.writeFileSync(path.resolve('./data/articles',id),JSON.stringify(article_params),'utf-8')
-
         }
         
+        fs.writeFileSync(path.resolve('./data/articles',id),JSON.stringify(article_params),'utf-8')
         if(req.headers.accept === "text/html"){
             res.writeHead(200,{"Content-type":"text/html"})
             html='http://127.0.0.1:8080/article?id='+id

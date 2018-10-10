@@ -4,17 +4,10 @@ var multipart = require("multiparty")
 
 module.exports = function(req){
     return new Promise((resolve,reject)=>{
-        var id = null
-        if(req.method === 'POST'){
-            id = Date.now().toString()
-        }else if(req.method === 'PUT'){
-            var query  = url.parse(req.url,true).query
-            id = query.id 
-        }else{
-            resolve()
-        }
-
-        //console.log(req.headers["content-type"])
+        req.params = {}
+        console.log(req.params)
+        req.params.setId = Date.now().toString()
+        req.params.queryId= url.parse(req.url,true).query.id
         if(/^application\/x-www-form-urlencoded/.test(req.headers["content-type"])){
             var data = ""
             req.on('data',function(chunk){
@@ -23,18 +16,22 @@ module.exports = function(req){
             req.on('end',function(){
                 data = decodeURI(data)
                 data = querystring.parse(data)
-                req.bodyData = data
-                req.articleId = id
+                req.params.fields = data
                 resolve()
             })
         }else if(/^multipart\/form-data/.test(req.headers["content-type"])){
             var form = new multipart.Form()
             form.parse(req,function(err,fields,files){
-                req.fields = fields
-                req.files = files
-                req.articleId = id
+
+                fields.title = fields.title[0]
+                fields.content = fields.content[0]
+                console.log(fields)
+                req.params.fields = fields
+                req.params.files = files
                 resolve()
             })
+        }else{
+            resolve()
         }
     })
 }
