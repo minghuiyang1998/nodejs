@@ -13,9 +13,6 @@ function render(filePath, data) {
 
 function route(req, res) {
     req.params = {}
-    req.params.setId = Date.now().toString()
-    req.params.queryId = url.parse(req.url, true).query.id
-
     var precast = bodyparse(req)
     precast.then(next)
 
@@ -48,7 +45,14 @@ var handlers = {
     'GET /article/:articleId/edit': function (req, res) {
         console.log("edit")
         var pathname = url.parse(req.url, true).pathname
-        var id = /^\/article\/(.+)\/edit$/.exec(pathname)[1]
+        var id;
+
+        try{
+            id = /^\/article\/(.+)\/edit$/.exec(pathname)[1]
+        }catch(err){
+            console.log(err)
+        }
+        
         var article = fs.readFileSync(path.resolve('./data/articles', id), 'utf-8')
         var params = JSON.parse(article)
         params['id'] = id
@@ -59,11 +63,12 @@ var handlers = {
     },
     'GET /article': function (req, res) {
         console.log("detail")
+        req.params.queryId = url.parse(req.url, true).query.id
         var id = req.params.queryId
         var article = fs.readFileSync(path.resolve('./data/articles', id), 'utf-8')
         var article_params = JSON.parse(article)
 
-        if (Object.keys(article_params).indexOf('file') != -1) {
+        if (article_params.file) {
             article_params.file = "http://127.0.0.1:8080/image/" + article_params.file
         }
         console.log('-----------------')
@@ -105,6 +110,7 @@ var handlers = {
     },
     "POST /articles": function (req, res) {
         console.log("Post")
+        req.params.setId = Date.now().toString()
         var id = req.params.setId
         var data = {}
         data.title = req.params.fields.title
@@ -125,6 +131,7 @@ var handlers = {
     },
     "DELETE /article": function (req, res) {
         console.log("delete")
+        req.params.queryId = url.parse(req.url, true).query.id
         var id = req.params.queryId
         var file = fs.readFileSync(path.resolve('./data/articles', id))
         var params = JSON.parse(file)
@@ -142,6 +149,7 @@ var handlers = {
     },
     "PUT /article": function (req, res) {
         console.log("PUT")
+        req.params.queryId = url.parse(req.url, true).query.id
         var id = req.params.queryId
         var data = {}
         data.title = req.params.fields.title
@@ -154,7 +162,7 @@ var handlers = {
             }
         }
 
-        if (Object.keys(req.params).indexOf("files") != -1) {
+        if (req.params.files) {
             var fileName = id + '_poster'
             data.file = fileName
             var filePath = req.params.files.image[0]['path']
